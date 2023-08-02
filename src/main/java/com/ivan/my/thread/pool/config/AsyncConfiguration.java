@@ -5,8 +5,10 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurerSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -39,7 +41,7 @@ public class AsyncConfiguration extends AsyncConfigurerSupport {
 
     @Bean
     @ConditionalOnMissingBean
-    RejectedExecutionHandler rejectedExecutionHandler() {
+    public RejectedExecutionHandler rejectedExecutionHandler() {
         return (r, executor) -> log.error("check failed — {}", r);
     }
 
@@ -70,6 +72,12 @@ public class AsyncConfiguration extends AsyncConfigurerSupport {
 
         threadPoolExecutor.prestartAllCoreThreads();
         return threadPoolExecutor;
+    }
+
+    @Bean
+    public TaskExecutor threadPoolTaskExecutor(ThreadPoolExecutor generalThreadPoolExecutor) {
+        // ConcurrentTaskExecutor - class-adapter for converting ThreadPoolExecutor to TaskExecutor
+        return new ConcurrentTaskExecutor(generalThreadPoolExecutor);
     }
 
 }
